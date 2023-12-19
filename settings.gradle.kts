@@ -15,4 +15,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Calendar"
 include(":app")
- 
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
