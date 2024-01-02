@@ -37,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,6 +47,7 @@ import com.victor.calendar.R
 import com.victor.calendar.data.getMonth
 import com.victor.calendar.ui.event.EventEditScreen
 import com.victor.calendar.ui.event.EventEntryScreen
+import com.victor.calendar.ui.event.EventViewModel
 import com.victor.calendar.ui.home.HomeScreen
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -57,9 +59,9 @@ enum class CalendarScreen(@StringRes val title: Int) {
     Search(title = R.string.search_event)
 }
 
+
 @SuppressLint("RestrictedApi")
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarApp(
     navController: NavHostController = rememberNavController()
@@ -71,6 +73,10 @@ fun CalendarApp(
     )
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
+    //val viewModel: OrderViewModel = viewModel()
+
+    val eventViewModel: EventViewModel = hiltViewModel<EventViewModel>()
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -119,7 +125,11 @@ fun CalendarApp(
                     HomeScreen(onEditButtonClicked = { navController.navigate(CalendarScreen.Edit.name) })
                 }
                 composable(route = CalendarScreen.Entry.name) {
-                    EventEntryScreen()
+                    EventEntryScreen(
+                        eventViewModel = eventViewModel,
+                        onTitleChanged = { eventViewModel.updateTitle(it) },
+                        onDescriptionChanged = { eventViewModel.updateDescription(it) }
+                    )
                 }
                 composable(route = CalendarScreen.Edit.name) {
                     EventEditScreen()
@@ -171,7 +181,7 @@ fun CalendarAppBar(
                         text = getMonth(
                             Calendar.getInstance()
                                 .get(Calendar.MONTH),
-                            ), style = MaterialTheme.typography.displayMedium
+                        ), style = MaterialTheme.typography.displayMedium
                     )
                     Icon(
                         imageVector = Icons.Filled.ArrowDropDown,

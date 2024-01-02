@@ -1,57 +1,45 @@
 package com.victor.calendar.ui.event
 
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class EventViewModel : ViewModel() {
+@HiltViewModel
+class EventViewModel @Inject constructor () : ViewModel() {
     private val _uiState = MutableStateFlow(EventUiState())
     val uiState: StateFlow<EventUiState> = _uiState.asStateFlow()
 
-    private fun updateTitle(newTitle: String) {
+    private fun updateProperties(transform: (EventUiState) -> EventUiState) {
         _uiState.update { currentState ->
-            currentState.copy(
-                title = newTitle,
-                start = currentState.start,
-                end = currentState.end,
-                description = currentState.description
-            )
+            transform(currentState)
         }
     }
 
-    private fun updateStart(newStart: Long) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                title = currentState.title,
-                start = newStart,
-                end = currentState.end,
-                description = currentState.description
-            )
+    fun updateTitle(newTitle: String) {
+        updateProperties { currentState ->
+            currentState.copy(title = newTitle)
         }
     }
 
-    private fun updateEnd(newEnd: Long) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                title = currentState.title,
-                start = currentState.start,
-                end = newEnd,
-                description = currentState.description
-            )
+    fun updateStart(newStart: Long) {
+        updateProperties { currentState ->
+            currentState.copy(start = newStart)
         }
     }
 
-    private fun updateDescription(newDescription: String) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                title = currentState.title,
-                start = currentState.start,
-                end = currentState.end,
-                description = newDescription
-            )
+    fun updateEnd(newEnd: Long) {
+        updateProperties { currentState ->
+            currentState.copy(end = newEnd)
         }
     }
 
+    fun updateDescription(newDescription: String) {
+        updateProperties { currentState ->
+            currentState.copy(description = newDescription)
+        }
+    }
 }

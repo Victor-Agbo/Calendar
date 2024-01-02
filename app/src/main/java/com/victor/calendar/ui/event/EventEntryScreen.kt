@@ -10,17 +10,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,24 +38,34 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.victor.calendar.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun EventEntryScreen(modifier: Modifier = Modifier) {
+fun EventEntryScreen(
+    modifier: Modifier = Modifier,
+    onTitleChanged: (String) -> Unit,
+    onDescriptionChanged: (String) -> Unit,
+    eventViewModel: EventViewModel
+) {
+    val eventUiState by eventViewModel.uiState.collectAsState()
     Column(
-        modifier = modifier.padding(8.dp),
+        modifier = modifier
+            .padding(8.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        var title by remember { mutableStateOf("") }
         val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+        val surfaceColor: Color = MaterialTheme.colorScheme.surface
 
         TextField(
             modifier = modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
-            value = title,
-            onValueChange = { title = it },
-            label = { Text(text = "Add title") }
+                .background(color = surfaceColor),
+            label = { Text(text = "Add title") },
+            onValueChange = onTitleChanged,
+            singleLine = true,
+            value = eventUiState.title,
         )
         EditScreenDivider()
         var checked by remember { mutableStateOf(true) }
@@ -76,7 +91,7 @@ fun EventEntryScreen(modifier: Modifier = Modifier) {
             modifier = modifier,
             content = "Wed, Dec 27, 2023"
         ) {
-            if(!checked) {
+            if (!checked) {
                 Text(text = "1:30 AM", style = it, color = onSurfaceVariantColor)
             }
         }
@@ -121,18 +136,38 @@ fun EventEntryScreen(modifier: Modifier = Modifier) {
         )
         EditScreenDivider()
 
-        AddEventOptionRow(
-            modifier = modifier,
-            icon = { m, t ->
-                Icon(
-                    modifier = m,
-                    imageVector = Icons.Filled.List,
-                    contentDescription = "globe",
-                    tint = t
-                )
-            },
-            content = "Add description"
-        )
+        Row(
+            modifier = modifier
+                .fillMaxWidth(1F)
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Icon(
+                modifier = modifier.width(45.dp),
+                imageVector = Icons.Filled.List,
+                contentDescription = "List",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            TextField(
+                modifier = modifier
+                    .fillMaxWidth(),
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = surfaceColor,
+                    focusedIndicatorColor = surfaceColor,
+                    unfocusedIndicatorColor = surfaceColor
+                ),
+                value = eventUiState.description,
+                onValueChange = onDescriptionChanged,
+                placeholder = {
+                    Text(
+                        text = "Add description",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            )
+        }
     }
 }
 
