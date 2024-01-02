@@ -124,6 +124,9 @@ fun CalendarApp(
                 composable(route = CalendarScreen.Edit.name) {
                     EventEditScreen()
                 }
+                composable(route = CalendarScreen.Search.name) {
+                    EventEditScreen()
+                }
             }
         }
     }
@@ -167,8 +170,8 @@ fun CalendarAppBar(
                     Text(
                         text = getMonth(
                             Calendar.getInstance()
-                                .get(Calendar.MONTH)
-                        )
+                                .get(Calendar.MONTH),
+                            ), style = MaterialTheme.typography.displayMedium
                     )
                     Icon(
                         imageVector = Icons.Filled.ArrowDropDown,

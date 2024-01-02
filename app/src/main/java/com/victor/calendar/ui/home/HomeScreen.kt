@@ -70,10 +70,10 @@ fun CalendarDay(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CalendarHour() {
+fun CalendarHour(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
-            .padding(top = 2.dp, end = 2.dp, bottom = 2.dp)
+        modifier = modifier
+            .padding(top = 1.dp, end = 2.dp, bottom = 1.dp)
             .fillMaxWidth(1F)
             .height(64.dp)
             .clip(MaterialTheme.shapes.small)
@@ -81,7 +81,11 @@ fun CalendarHour() {
             .padding(4.dp)
 
     ) {
-        Text(text = "Hello")
+        Text(
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            text = "Hello",
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 

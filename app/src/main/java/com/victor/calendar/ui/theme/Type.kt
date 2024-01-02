@@ -33,6 +33,16 @@ val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = robotoFamily,
         fontWeight = FontWeight.Normal,
+        fontSize = 18.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = robotoFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = robotoFamily,
+        fontWeight = FontWeight.Normal,
         fontSize = 14.sp
     ),
     labelLarge = TextStyle(
