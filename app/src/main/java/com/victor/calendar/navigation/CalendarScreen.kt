@@ -64,7 +64,7 @@ enum class CalendarScreen(@StringRes val title: Int) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CalendarApp(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     // Get current back stack entry
@@ -128,7 +128,7 @@ fun CalendarApp(
                     EventEntryScreen(
                         eventViewModel = eventViewModel,
                         onTitleChanged = { eventViewModel.updateTitle(it) },
-                        onDescriptionChanged = { eventViewModel.updateDescription(it) }
+                        onDescriptionChanged = { eventViewModel.updateDescription(it) },
                     )
                 }
                 composable(route = CalendarScreen.Edit.name) {

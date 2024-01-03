@@ -1,8 +1,10 @@
 package com.victor.calendar.ui.event
 
+import android.icu.util.Calendar
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,6 +26,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,6 +40,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.victor.calendar.R
+import com.victor.calendar.data.EventDate
+import com.victor.calendar.util.TimeDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -45,7 +50,7 @@ fun EventEntryScreen(
     modifier: Modifier = Modifier,
     onTitleChanged: (String) -> Unit,
     onDescriptionChanged: (String) -> Unit,
-    eventViewModel: EventViewModel
+    eventViewModel: EventViewModel,
 ) {
     val eventUiState by eventViewModel.uiState.collectAsState()
     Column(
@@ -68,7 +73,7 @@ fun EventEntryScreen(
             value = eventUiState.title,
         )
         EditScreenDivider()
-        var checked by remember { mutableStateOf(true) }
+        var checked by remember { mutableStateOf(false) }
         AddEventOptionRow(
             modifier = modifier,
             icon = { m, t ->
@@ -87,12 +92,78 @@ fun EventEntryScreen(
             )
         }
 
+        val startDate = Calendar.getInstance()
+        val endDate = Calendar.getInstance()
+
+        val startDateState by remember {
+            mutableStateOf(
+                EventDate(
+                    hour = startDate.get(Calendar.HOUR_OF_DAY),
+                    minute = startDate.get(Calendar.MINUTE)
+                )
+            )
+        }
+        val endDateState by remember {
+            mutableStateOf(
+                EventDate(
+                    hour = endDate.get(Calendar.HOUR_OF_DAY),
+                    minute = endDate.get(Calendar.MINUTE)
+                )
+            )
+        }
+
+        var showStartDialog by remember {
+            mutableStateOf(false)
+        }
+        var showEndDialog by remember {
+            mutableStateOf(false)
+        }
+
+        var timePickerState by remember {
+            mutableStateOf(TimePickerState(0, 0, false))
+        }
+
+        if (showStartDialog) {
+            TimeDialog(
+                onDismissRequest = {
+                    showStartDialog = false
+                    startDateState.hour = timePickerState.hour
+                    startDateState.minute = timePickerState.minute
+                },
+                timePickerState = timePickerState,
+            )
+        }
+        if (showEndDialog) {
+            TimeDialog(
+                onDismissRequest = {
+                    showEndDialog = false
+                    endDateState.hour = timePickerState.hour
+                    endDateState.minute = timePickerState.minute
+                },
+                timePickerState = timePickerState,
+            )
+        }
+
         AddEventOptionRow(
             modifier = modifier,
             content = "Wed, Dec 27, 2023"
         ) {
             if (!checked) {
-                Text(text = "1:30 AM", style = it, color = onSurfaceVariantColor)
+                Text(
+                    modifier = modifier
+                        .clickable {
+                            timePickerState = TimePickerState(
+                                initialHour = startDateState.hour,
+                                initialMinute = startDateState.minute,
+                                is24Hour = false
+                            )
+                            showStartDialog = true
+                        }
+                        .padding(8.dp),
+                    text = formatTime(startDateState.hour, startDateState.minute),
+                    style = it,
+                    color = onSurfaceVariantColor
+                )
             }
         }
         AddEventOptionRow(
@@ -100,7 +171,21 @@ fun EventEntryScreen(
             content = "Thur, Dec 28, 2023"
         ) {
             if (!checked) {
-                Text(text = "1:30 AM", style = it, color = onSurfaceVariantColor)
+                Text(
+                    modifier = modifier
+                        .clickable {
+                            timePickerState = TimePickerState(
+                                initialHour = endDateState.hour,
+                                initialMinute = endDateState.minute,
+                                is24Hour = false
+                            )
+                            showEndDialog = true
+                        }
+                        .padding(8.dp),
+                    text = formatTime(endDateState.hour, endDateState.minute),
+                    style = it,
+                    color = onSurfaceVariantColor
+                )
             }
         }
 
@@ -153,8 +238,8 @@ fun EventEntryScreen(
             TextField(
                 modifier = modifier
                     .fillMaxWidth(),
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = surfaceColor,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = surfaceColor,
                     focusedIndicatorColor = surfaceColor,
                     unfocusedIndicatorColor = surfaceColor
                 ),
@@ -200,6 +285,7 @@ fun AddEventOptionRow(
         if (misc != null) {
             misc(MaterialTheme.typography.bodyMedium)
         }
+
     }
 }
 
@@ -210,4 +296,25 @@ fun EditScreenDivider(modifier: Modifier = Modifier) {
             .padding(top = 16.dp)
             .fillMaxWidth()
     )
+}
+
+fun formatTime(selectedHour: Int, selectedMinute: Int): String {
+    return "${
+        when (selectedHour) {
+            0 -> {
+                "12"
+            }
+            in 1..12 -> {
+                selectedHour
+            }
+            else -> {
+                selectedHour % 12
+            }
+        }
+        
+    }:${
+        if (selectedMinute < 10) "0$selectedMinute" else selectedMinute
+    } ${
+        if (selectedHour < 12) "AM" else "PM"
+    }"
 }

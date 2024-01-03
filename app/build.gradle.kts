@@ -70,7 +70,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
-
+    implementation("com.google.android.material:material:1.3.0")
     val roomVersion = "2.6.1"
     //Room
     implementation("androidx.room:room-runtime:$roomVersion")

@@ -8,10 +8,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.victor.calendar.navigation.CalendarApp
 import com.victor.calendar.ui.theme.CalendarTheme
 import dagger.hilt.android.AndroidEntryPoint
