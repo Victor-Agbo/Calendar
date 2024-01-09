@@ -5,9 +5,6 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-/**
- * Database class with a singleton Instance object.
- */
 @Database(entities = [Event::class], version = 1, exportSchema = false)
 abstract class CalendarDatabase : RoomDatabase() {
 

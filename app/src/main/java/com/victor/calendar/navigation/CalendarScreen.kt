@@ -73,7 +73,6 @@ fun CalendarApp(
     )
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
-    //val viewModel: OrderViewModel = viewModel()
 
     val eventViewModel: EventViewModel = hiltViewModel<EventViewModel>()
 
@@ -127,8 +126,6 @@ fun CalendarApp(
                 composable(route = CalendarScreen.Entry.name) {
                     EventEntryScreen(
                         eventViewModel = eventViewModel,
-                        onTitleChanged = { eventViewModel.updateTitle(it) },
-                        onDescriptionChanged = { eventViewModel.updateDescription(it) },
                     )
                 }
                 composable(route = CalendarScreen.Edit.name) {

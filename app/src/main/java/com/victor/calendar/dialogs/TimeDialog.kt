@@ -1,4 +1,4 @@
-package com.victor.calendar.util
+package com.victor.calendar.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

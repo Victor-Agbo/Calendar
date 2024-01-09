@@ -18,15 +18,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,16 +43,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.victor.calendar.R
-import com.victor.calendar.data.EventDate
-import com.victor.calendar.util.TimeDialog
+import com.victor.calendar.dialogs.DateDialog
+import com.victor.calendar.dialogs.TimeDialog
+import com.victor.calendar.util.convertMillisToFormattedDate
+import com.victor.calendar.util.convertMillisToFormattedTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventEntryScreen(
     modifier: Modifier = Modifier,
-    onTitleChanged: (String) -> Unit,
-    onDescriptionChanged: (String) -> Unit,
     eventViewModel: EventViewModel,
 ) {
     val eventUiState by eventViewModel.uiState.collectAsState()
@@ -68,7 +71,7 @@ fun EventEntryScreen(
                 .fillMaxWidth()
                 .background(color = surfaceColor),
             label = { Text(text = "Add title") },
-            onValueChange = onTitleChanged,
+            onValueChange = { eventViewModel.updateTitle(it) },
             singleLine = true,
             value = eventUiState.title,
         )
@@ -91,31 +94,21 @@ fun EventEntryScreen(
                 onCheckedChange = { checked = it }
             )
         }
+        val calendar = Calendar.getInstance()
 
-        val startDate = Calendar.getInstance()
-        val endDate = Calendar.getInstance()
-
-        val startDateState by remember {
-            mutableStateOf(
-                EventDate(
-                    hour = startDate.get(Calendar.HOUR_OF_DAY),
-                    minute = startDate.get(Calendar.MINUTE)
-                )
-            )
+        val startDate by remember {
+            mutableStateOf(Calendar.getInstance())
         }
-        val endDateState by remember {
-            mutableStateOf(
-                EventDate(
-                    hour = endDate.get(Calendar.HOUR_OF_DAY),
-                    minute = endDate.get(Calendar.MINUTE)
-                )
-            )
+        val endDate by remember {
+            mutableStateOf(Calendar.getInstance())
         }
 
-        var showStartDialog by remember {
+        var showTimeDialog by remember { mutableStateOf(false) }
+
+        var showStartTimeDialog by remember {
             mutableStateOf(false)
         }
-        var showEndDialog by remember {
+        var showEndTimeDialog by remember {
             mutableStateOf(false)
         }
 
@@ -123,71 +116,137 @@ fun EventEntryScreen(
             mutableStateOf(TimePickerState(0, 0, false))
         }
 
-        if (showStartDialog) {
-            TimeDialog(
-                onDismissRequest = {
-                    showStartDialog = false
-                    startDateState.hour = timePickerState.hour
-                    startDateState.minute = timePickerState.minute
-                },
-                timePickerState = timePickerState,
+        fun setTimeAndDismiss(dialogType: String) {
+            showTimeDialog = false
+            showEndTimeDialog = false
+            showStartTimeDialog = false
+
+            val targetDate: Calendar
+            if (dialogType == "start") {
+                targetDate = startDate
+                eventViewModel.updateStart(startDate.timeInMillis)
+            } else {
+                targetDate = endDate
+                eventViewModel.updateEnd(endDate.timeInMillis)
+            }
+            targetDate.set(
+                targetDate.get(Calendar.YEAR),
+                targetDate.get(Calendar.MONTH),
+                targetDate.get(Calendar.DATE),
+                timePickerState.hour,
+                timePickerState.minute
             )
+
         }
-        if (showEndDialog) {
+
+        if (showTimeDialog) {
             TimeDialog(
-                onDismissRequest = {
-                    showEndDialog = false
-                    endDateState.hour = timePickerState.hour
-                    endDateState.minute = timePickerState.minute
-                },
+                onDismissRequest = { setTimeAndDismiss(if (showStartTimeDialog) "start" else "end") },
                 timePickerState = timePickerState,
             )
         }
 
-        AddEventOptionRow(
-            modifier = modifier,
-            content = "Wed, Dec 27, 2023"
-        ) {
-            if (!checked) {
-                Text(
-                    modifier = modifier
-                        .clickable {
-                            timePickerState = TimePickerState(
-                                initialHour = startDateState.hour,
-                                initialMinute = startDateState.minute,
-                                is24Hour = false
-                            )
-                            showStartDialog = true
-                        }
-                        .padding(8.dp),
-                    text = formatTime(startDateState.hour, startDateState.minute),
-                    style = it,
-                    color = onSurfaceVariantColor
-                )
-            }
+        val datePickerState =
+            rememberDatePickerState(initialSelectedDateMillis = calendar.timeInMillis)
+
+        var showStartDateDialog by remember {
+            mutableStateOf(false)
+        }
+        var showEndDateDialog by remember {
+            mutableStateOf(false)
+        }
+
+
+        if (showStartDateDialog || showEndDateDialog) {
+            DateDialog(
+                onConfirmRequest = {
+                    if (showStartDateDialog) {
+                        showStartDateDialog = false
+                        eventViewModel.updateStart(startDate.timeInMillis)
+                    } else {
+                        eventViewModel.updateStart(startDate.timeInMillis)
+                        showEndDateDialog = false
+                    }
+
+                },
+                onDismissRequest = {
+                    showStartDateDialog = false
+                    showEndDateDialog = false
+                },
+                date = if (showStartDateDialog) startDate else endDate,
+                datePickerState = datePickerState
+            )
         }
         AddEventOptionRow(
             modifier = modifier,
-            content = "Thur, Dec 28, 2023"
-        ) {
-            if (!checked) {
+            mainCompose = {
                 Text(
                     modifier = modifier
                         .clickable {
-                            timePickerState = TimePickerState(
-                                initialHour = endDateState.hour,
-                                initialMinute = endDateState.minute,
-                                is24Hour = false
-                            )
-                            showEndDialog = true
-                        }
-                        .padding(8.dp),
-                    text = formatTime(endDateState.hour, endDateState.minute),
+                            datePickerState.setSelection(startDate.timeInMillis)
+                            showStartDateDialog = true
+                        },
+                    color = onSurfaceVariantColor,
                     style = it,
-                    color = onSurfaceVariantColor
+                    text = convertMillisToFormattedDate(startDate.timeInMillis)
                 )
-            }
-        }
+            },
+            misc = {
+                if (!checked) {
+                    Text(
+                        modifier = modifier
+                            .clickable {
+                                timePickerState = TimePickerState(
+                                    initialHour = startDate.get(Calendar.HOUR),
+                                    initialMinute = startDate.get(Calendar.MINUTE),
+                                    is24Hour = true
+                                )
+                                showTimeDialog = true
+                                showStartTimeDialog = true
+                            }
+                            .padding(4.dp),
+                        text = convertMillisToFormattedTime(startDate.timeInMillis),
+                        style = it,
+                        color = onSurfaceVariantColor
+                    )
+                }
+            })
+
+        AddEventOptionRow(
+            modifier = modifier,
+            mainCompose = {
+                Text(
+                    modifier = modifier
+                        .clickable {
+                            datePickerState.setSelection(endDate.timeInMillis)
+                            showEndDateDialog = true
+                        },
+                    color = onSurfaceVariantColor,
+                    style = it,
+                    text = convertMillisToFormattedDate(endDate.timeInMillis)
+                )
+            },
+            misc = {
+                if (!checked) {
+                    Text(
+                        modifier = modifier
+                            .clickable {
+                                timePickerState = TimePickerState(
+                                    initialHour = endDate.get(Calendar.HOUR),
+                                    initialMinute = endDate.get(Calendar.MINUTE),
+                                    is24Hour = true
+                                )
+                                showTimeDialog = true
+                                showEndTimeDialog = true
+                            }
+
+                            .padding(4.dp),
+                        text = convertMillisToFormattedTime(endDate.timeInMillis),
+                        style = it,
+                        color = onSurfaceVariantColor
+                    )
+                }
+            })
 
         AddEventOptionRow(
             modifier = modifier,
@@ -221,38 +280,49 @@ fun EventEntryScreen(
         )
         EditScreenDivider()
 
-        Row(
-            modifier = modifier
-                .fillMaxWidth(1F)
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Icon(
-                modifier = modifier.width(45.dp),
-                imageVector = Icons.Filled.List,
-                contentDescription = "List",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        AddEventOptionRow(
+            modifier = modifier,
+            icon = { m, t ->
+                Icon(
+                    modifier = m,
+                    imageVector = Icons.Filled.List,
+                    contentDescription = "List",
+                    tint = t
+                )
+            },
+            mainCompose = {
+                TextField(
+                    modifier = modifier
+                        .fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = surfaceColor,
+                        focusedIndicatorColor = surfaceColor,
+                        unfocusedIndicatorColor = surfaceColor
+                    ),
+                    value = eventUiState.description,
+                    onValueChange = { eventViewModel.updateDescription(it) },
+                    placeholder = {
+                        Text(
+                            text = "Add description",
+                        )
+                    }
+                )
+            }
+        )
 
-            TextField(
-                modifier = modifier
-                    .fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = surfaceColor,
-                    focusedIndicatorColor = surfaceColor,
-                    unfocusedIndicatorColor = surfaceColor
-                ),
-                value = eventUiState.description,
-                onValueChange = onDescriptionChanged,
-                placeholder = {
-                    Text(
-                        text = "Add description",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            )
+        Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            OutlinedButton(onClick = { /*TODO*/ }) {
+                Text(text = "Clear")
+            }
+            Button(onClick = { /*TODO*/ }) {
+                Text(text = "Save")
+            }
         }
+
+        Text(
+            modifier = modifier.background(Color.Red),
+            text = "${eventUiState.title} ${eventUiState.start} ${eventUiState.end} ${eventUiState.description} "
+        )
     }
 }
 
@@ -261,9 +331,11 @@ fun EventEntryScreen(
 fun AddEventOptionRow(
     modifier: Modifier = Modifier,
     icon: @Composable ((modifier: Modifier, tint: Color) -> Unit)? = null,
-    content: String,
+    content: String? = null,
+    mainCompose: @Composable ((textStyle: TextStyle) -> Unit)? = null,
     misc: @Composable ((textStyle: TextStyle) -> Unit)? = null
 ) {
+    val bodyMedium = MaterialTheme.typography.bodyMedium
     Row(
         modifier = modifier
             .fillMaxWidth(1F)
@@ -276,14 +348,20 @@ fun AddEventOptionRow(
         } else {
             Spacer(modifier = modifier.width(48.dp))
         }
-        Text(
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            text = content,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        if (content != null) {
+            Text(
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = content,
+                style = bodyMedium
+            )
+        } else {
+            if (mainCompose != null) {
+                mainCompose(bodyMedium)
+            }
+        }
         Spacer(modifier = modifier.weight(1F))
         if (misc != null) {
-            misc(MaterialTheme.typography.bodyMedium)
+            misc(bodyMedium)
         }
 
     }
@@ -298,23 +376,4 @@ fun EditScreenDivider(modifier: Modifier = Modifier) {
     )
 }
 
-fun formatTime(selectedHour: Int, selectedMinute: Int): String {
-    return "${
-        when (selectedHour) {
-            0 -> {
-                "12"
-            }
-            in 1..12 -> {
-                selectedHour
-            }
-            else -> {
-                selectedHour % 12
-            }
-        }
-        
-    }:${
-        if (selectedMinute < 10) "0$selectedMinute" else selectedMinute
-    } ${
-        if (selectedHour < 12) "AM" else "PM"
-    }"
-}
+
