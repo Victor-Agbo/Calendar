@@ -73,7 +73,7 @@ fun EventEntryScreen(
             label = { Text(text = "Add title") },
             onValueChange = { eventViewModel.updateTitle(it) },
             singleLine = true,
-            value = eventUiState.title,
+            value = eventUiState.eventDetails.title,
         )
         EditScreenDivider()
         var checked by remember { mutableStateOf(false) }
@@ -299,7 +299,7 @@ fun EventEntryScreen(
                         focusedIndicatorColor = surfaceColor,
                         unfocusedIndicatorColor = surfaceColor
                     ),
-                    value = eventUiState.description,
+                    value = eventUiState.eventDetails.description,
                     onValueChange = { eventViewModel.updateDescription(it) },
                     placeholder = {
                         Text(
@@ -321,7 +321,7 @@ fun EventEntryScreen(
 
         Text(
             modifier = modifier.background(Color.Red),
-            text = "${eventUiState.title} ${eventUiState.start} ${eventUiState.end} ${eventUiState.description} "
+            text = "${eventUiState.eventDetails.title} ${eventUiState.eventDetails.start} ${eventUiState.eventDetails.end} ${eventUiState.eventDetails.description} "
         )
     }
 }

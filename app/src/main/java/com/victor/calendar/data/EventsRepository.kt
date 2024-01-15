@@ -2,7 +2,8 @@ package com.victor.calendar.data
 
 import kotlinx.coroutines.flow.Flow
 
-interface EventRepository {
+interface EventsRepository {
+
     fun getAllEventsStream(): Flow<List<Event>>
 
     fun getEventStream(id: Int): Flow<Event?>
