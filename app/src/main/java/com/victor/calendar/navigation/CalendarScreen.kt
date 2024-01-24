@@ -49,6 +49,7 @@ import com.victor.calendar.ui.event.EventEditScreen
 import com.victor.calendar.ui.event.EventEntryScreen
 import com.victor.calendar.ui.event.EventViewModel
 import com.victor.calendar.ui.home.HomeScreen
+import com.victor.calendar.ui.home.HomeViewModel
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -67,7 +68,7 @@ fun CalendarApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
-    // Get current back stack entry
+
     val currentScreen = CalendarScreen.valueOf(
         backStackEntry?.destination?.route ?: CalendarScreen.Start.name
     )
@@ -75,6 +76,7 @@ fun CalendarApp(
     val drawerScope = rememberCoroutineScope()
 
     val eventViewModel: EventViewModel = hiltViewModel<EventViewModel>()
+    val homeViewModel: HomeViewModel = hiltViewModel<HomeViewModel>()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -121,11 +123,13 @@ fun CalendarApp(
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(route = CalendarScreen.Start.name) {
-                    HomeScreen(onEditButtonClicked = { navController.navigate(CalendarScreen.Edit.name) })
+                    HomeScreen(homeViewModel = homeViewModel,
+                        onEditButtonClicked = { navController.navigate(CalendarScreen.Edit.name) })
                 }
                 composable(route = CalendarScreen.Entry.name) {
                     EventEntryScreen(
                         eventViewModel = eventViewModel,
+                        navigateBack = { navController.navigate(CalendarScreen.Start.name) }
                     )
                 }
                 composable(route = CalendarScreen.Edit.name) {

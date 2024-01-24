@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.victor.calendar.util.MILLIS_IN_WEEK
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,4 +25,9 @@ interface EventDao {
 
     @Query("SELECT * from events ORDER BY start ASC")
     fun getAllEvents(): Flow<List<Event>>
+
+    @Query("SELECT * from events WHERE start < :startTime AND `end` < :startTime+${MILLIS_IN_WEEK} ORDER BY start ASC")
+    fun getWeekEvents(startTime: Long): Flow<List<Event>>
+
+
 }

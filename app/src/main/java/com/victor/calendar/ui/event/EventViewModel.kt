@@ -15,10 +15,24 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
     private val _uiState = MutableStateFlow(EventUiState())
     val uiState: StateFlow<EventUiState> = _uiState.asStateFlow()
 
+    fun resetEventDetails() {
+        _uiState.update { currentState ->
+            currentState.copy(eventDetails = EventDetails(), isEventValid = false)
+        }
+    }
+
+    suspend fun saveEvent() {
+        offlineEventsRepository.insertEvent(uiState.value.eventDetails.toEvent())
+    }
+
+
     private fun updateEventDetails(updateFunction: (EventDetails) -> EventDetails) {
         _uiState.update { currentState ->
             val updatedDetails = updateFunction(currentState.eventDetails)
-            currentState.copy(eventDetails = updatedDetails, isEventValid = validateInput())
+            currentState.copy(
+                eventDetails = updatedDetails,
+                isEventValid = validateInput(updatedDetails)
+            )
         }
     }
 
@@ -46,51 +60,17 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
         }
     }
 
-
-//    private fun updateProperties(transform: (EventUiState) -> EventUiState) {
-//        _uiState.update { currentState ->
-//            transform(currentState)
-//        }
-//    }
-//
-//    fun updateTitle(newTitle: String) {
-//        val tempDetails = uiState.value.eventDetails
-//        tempDetails.title = newTitle
-//
-//        updateProperties { currentState ->
-//            currentState.copy(eventDetails = tempDetails, isEventValid = validateInput())
-//        }
-//    }
-//
-//    fun updateStart(newStart: Long) {
-//        val tempDetails = uiState.value.eventDetails
-//        tempDetails.start = newStart
-//
-//        updateProperties { currentState ->
-//            currentState.copy(eventDetails = tempDetails, isEventValid = validateInput())
-//        }
-//    }
-//
-//    fun updateEnd(newEnd: Long) {
-//        val tempDetails = uiState.value.eventDetails
-//        tempDetails.end = newEnd
-//
-//        updateProperties { currentState ->
-//            currentState.copy(eventDetails = tempDetails, isEventValid = validateInput())
-//        }
-//    }
-//
-//    fun updateDescription(newDescription: String) {
-//        val tempDetails = uiState.value.eventDetails
-//        tempDetails.description = newDescription
-//        updateProperties { currentState ->
-//            currentState.copy(eventDetails = tempDetails, isEventValid = validateInput())
-//        }
-//    }
-
-    private fun validateInput(uiState: EventDetails = _uiState.value.eventDetails): Boolean {
-        return with(uiState) {
-            true
+    fun updateValidity() {
+        _uiState.update { currentState ->
+            currentState.copy(isEventValid = validateInput())
         }
     }
+
+    private fun validateInput(uiState: EventDetails = this.uiState.value.eventDetails): Boolean {
+        return with(uiState) {
+            title.isNotBlank() && start < end
+        }
+    }
+
+
 }

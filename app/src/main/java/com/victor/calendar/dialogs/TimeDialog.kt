@@ -48,7 +48,7 @@ fun TimeDialog(
             // time picker
             TimePicker(state = timePickerState)
 
-            // buttons
+
             Row(
                 modifier = Modifier
                     .padding(top = 12.dp)
@@ -59,11 +59,9 @@ fun TimeDialog(
                 TextButton(onClick = onDismissRequest) {
                     Text(text = "Dismiss")
                 }
-
                 TextButton(
                     onClick = {
                         onDismissRequest()
-
                     }
                 ) {
                     Text(text = "Confirm")

@@ -6,14 +6,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
@@ -35,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +47,7 @@ import com.victor.calendar.dialogs.DateDialog
 import com.victor.calendar.dialogs.TimeDialog
 import com.victor.calendar.util.convertMillisToFormattedDate
 import com.victor.calendar.util.convertMillisToFormattedTime
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -54,275 +55,292 @@ import com.victor.calendar.util.convertMillisToFormattedTime
 fun EventEntryScreen(
     modifier: Modifier = Modifier,
     eventViewModel: EventViewModel,
+    navigateBack: () -> Unit
 ) {
     val eventUiState by eventViewModel.uiState.collectAsState()
-    Column(
+
+    LazyColumn(
         modifier = modifier
             .padding(8.dp)
-            .verticalScroll(rememberScrollState()),
+            .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Top,
     ) {
-        val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
-        val surfaceColor: Color = MaterialTheme.colorScheme.surface
+        item {
+            val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+            val surfaceColor: Color = MaterialTheme.colorScheme.surface
 
-        TextField(
-            modifier = modifier
-                .fillMaxWidth()
-                .background(color = surfaceColor),
-            label = { Text(text = "Add title") },
-            onValueChange = { eventViewModel.updateTitle(it) },
-            singleLine = true,
-            value = eventUiState.eventDetails.title,
-        )
-        EditScreenDivider()
-        var checked by remember { mutableStateOf(false) }
-        AddEventOptionRow(
-            modifier = modifier,
-            icon = { m, t ->
-                Icon(
-                    imageVector = Icons.Filled.Face,
-                    modifier = m,
-                    contentDescription = "Face",
-                    tint = t
-                )
-            },
-            content = "All-day"
-        ) {
-            Switch(
-                checked = checked,
-                onCheckedChange = { checked = it }
+            TextField(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .background(color = surfaceColor),
+                label = { Text(text = "Add title") },
+                onValueChange = { eventViewModel.updateTitle(it) },
+                singleLine = true,
+                value = eventUiState.eventDetails.title,
             )
-        }
-        val calendar = Calendar.getInstance()
-
-        val startDate by remember {
-            mutableStateOf(Calendar.getInstance())
-        }
-        val endDate by remember {
-            mutableStateOf(Calendar.getInstance())
-        }
-
-        var showTimeDialog by remember { mutableStateOf(false) }
-
-        var showStartTimeDialog by remember {
-            mutableStateOf(false)
-        }
-        var showEndTimeDialog by remember {
-            mutableStateOf(false)
-        }
-
-        var timePickerState by remember {
-            mutableStateOf(TimePickerState(0, 0, false))
-        }
-
-        fun setTimeAndDismiss(dialogType: String) {
-            showTimeDialog = false
-            showEndTimeDialog = false
-            showStartTimeDialog = false
-
-            val targetDate: Calendar
-            if (dialogType == "start") {
-                targetDate = startDate
-                eventViewModel.updateStart(startDate.timeInMillis)
-            } else {
-                targetDate = endDate
-                eventViewModel.updateEnd(endDate.timeInMillis)
+            EditScreenDivider()
+            var checked by remember { mutableStateOf(false) }
+            AddEventOptionRow(
+                modifier = modifier,
+                icon = { m, t ->
+                    Icon(
+                        imageVector = Icons.Filled.Face,
+                        modifier = m,
+                        contentDescription = "Face",
+                        tint = t
+                    )
+                },
+                content = "All-day"
+            ) {
+                Switch(
+                    checked = checked,
+                    onCheckedChange = { checked = it }
+                )
             }
-            targetDate.set(
-                targetDate.get(Calendar.YEAR),
-                targetDate.get(Calendar.MONTH),
-                targetDate.get(Calendar.DATE),
-                timePickerState.hour,
-                timePickerState.minute
-            )
+            val calendar = Calendar.getInstance()
 
-        }
+            val startDate by remember {
+                mutableStateOf(Calendar.getInstance())
+            }
+            val endDate by remember {
+                mutableStateOf(Calendar.getInstance())
+            }
 
-        if (showTimeDialog) {
-            TimeDialog(
-                onDismissRequest = { setTimeAndDismiss(if (showStartTimeDialog) "start" else "end") },
-                timePickerState = timePickerState,
-            )
-        }
+            var showTimeDialog by remember { mutableStateOf(false) }
 
-        val datePickerState =
-            rememberDatePickerState(initialSelectedDateMillis = calendar.timeInMillis)
+            var showStartTimeDialog by remember {
+                mutableStateOf(false)
+            }
+            var showEndTimeDialog by remember {
+                mutableStateOf(false)
+            }
 
-        var showStartDateDialog by remember {
-            mutableStateOf(false)
-        }
-        var showEndDateDialog by remember {
-            mutableStateOf(false)
-        }
+            var timePickerState by remember {
+                mutableStateOf(TimePickerState(0, 0, false))
+            }
+
+            fun setTimeAndDismiss(dialogType: String) {
+                val targetDate: Calendar = if (dialogType == "start") {
+                    startDate
+                } else {
+                    endDate
+                }
+
+                targetDate.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                targetDate.set(Calendar.MINUTE, timePickerState.minute)
+
+                if (dialogType == "start") {
+                    eventViewModel.updateStart(startDate.timeInMillis)
+                } else {
+                    eventViewModel.updateEnd(endDate.timeInMillis)
+                }
+
+                showTimeDialog = false
+                showEndTimeDialog = false
+                showStartTimeDialog = false
+
+            }
+
+            if (showTimeDialog) {
+                TimeDialog(
+                    onDismissRequest = { setTimeAndDismiss(if (showStartTimeDialog) "start" else "end") },
+                    timePickerState = timePickerState,
+                )
+            }
+
+            val datePickerState =
+                rememberDatePickerState(initialSelectedDateMillis = calendar.timeInMillis)
+
+            var showStartDateDialog by remember {
+                mutableStateOf(false)
+            }
+            var showEndDateDialog by remember {
+                mutableStateOf(false)
+            }
 
 
-        if (showStartDateDialog || showEndDateDialog) {
-            DateDialog(
-                onConfirmRequest = {
-                    if (showStartDateDialog) {
+            if (showStartDateDialog || showEndDateDialog) {
+                DateDialog(
+                    onConfirmRequest = {
+                        if (showStartDateDialog) {
+                            eventViewModel.updateStart(startDate.timeInMillis)
+                            showStartDateDialog = false
+                        } else {
+                            eventViewModel.updateEnd(endDate.timeInMillis)
+                            showEndDateDialog = false
+                        }
+
+                    },
+                    onDismissRequest = {
                         showStartDateDialog = false
-                        eventViewModel.updateStart(startDate.timeInMillis)
-                    } else {
-                        eventViewModel.updateStart(startDate.timeInMillis)
                         showEndDateDialog = false
-                    }
-
-                },
-                onDismissRequest = {
-                    showStartDateDialog = false
-                    showEndDateDialog = false
-                },
-                date = if (showStartDateDialog) startDate else endDate,
-                datePickerState = datePickerState
-            )
-        }
-        AddEventOptionRow(
-            modifier = modifier,
-            mainCompose = {
-                Text(
-                    modifier = modifier
-                        .clickable {
-                            datePickerState.setSelection(startDate.timeInMillis)
-                            showStartDateDialog = true
-                        },
-                    color = onSurfaceVariantColor,
-                    style = it,
-                    text = convertMillisToFormattedDate(startDate.timeInMillis)
+                    },
+                    date = if (showStartDateDialog) startDate else endDate,
+                    datePickerState = datePickerState
                 )
-            },
-            misc = {
-                if (!checked) {
+            }
+            AddEventOptionRow(
+                modifier = modifier,
+                mainCompose = {
                     Text(
                         modifier = modifier
                             .clickable {
-                                timePickerState = TimePickerState(
-                                    initialHour = startDate.get(Calendar.HOUR),
-                                    initialMinute = startDate.get(Calendar.MINUTE),
-                                    is24Hour = true
-                                )
-                                showTimeDialog = true
-                                showStartTimeDialog = true
-                            }
-                            .padding(4.dp),
-                        text = convertMillisToFormattedTime(startDate.timeInMillis),
+                                datePickerState.setSelection(startDate.timeInMillis)
+                                showStartDateDialog = true
+                            },
+                        color = onSurfaceVariantColor,
                         style = it,
-                        color = onSurfaceVariantColor
+                        text = convertMillisToFormattedDate(startDate.timeInMillis)
                     )
-                }
-            })
-
-        AddEventOptionRow(
-            modifier = modifier,
-            mainCompose = {
-                Text(
-                    modifier = modifier
-                        .clickable {
-                            datePickerState.setSelection(endDate.timeInMillis)
-                            showEndDateDialog = true
-                        },
-                    color = onSurfaceVariantColor,
-                    style = it,
-                    text = convertMillisToFormattedDate(endDate.timeInMillis)
-                )
-            },
-            misc = {
-                if (!checked) {
-                    Text(
-                        modifier = modifier
-                            .clickable {
-                                timePickerState = TimePickerState(
-                                    initialHour = endDate.get(Calendar.HOUR),
-                                    initialMinute = endDate.get(Calendar.MINUTE),
-                                    is24Hour = true
-                                )
-                                showTimeDialog = true
-                                showEndTimeDialog = true
-                            }
-
-                            .padding(4.dp),
-                        text = convertMillisToFormattedTime(endDate.timeInMillis),
-                        style = it,
-                        color = onSurfaceVariantColor
-                    )
-                }
-            })
-
-        AddEventOptionRow(
-            modifier = modifier,
-            icon = { m, t ->
-                Icon(
-                    modifier = m,
-                    painter = painterResource(id = R.drawable.public_24px),
-                    contentDescription = "globe",
-                    tint = t
-                )
-            },
-            content = "Indian Standard Time"
-        )
-        AddEventOptionRow(
-            modifier = modifier,
-            icon = { m, t ->
-                Icon(
-                    modifier = m,
-                    imageVector = Icons.Filled.Refresh,
-                    contentDescription = "globe",
-                    tint = t
-                )
-            },
-            content = "Does not repeat"
-        )
-        EditScreenDivider()
-
-        AddEventOptionRow(
-            modifier = modifier,
-            content = "Add notification"
-        )
-        EditScreenDivider()
-
-        AddEventOptionRow(
-            modifier = modifier,
-            icon = { m, t ->
-                Icon(
-                    modifier = m,
-                    imageVector = Icons.Filled.List,
-                    contentDescription = "List",
-                    tint = t
-                )
-            },
-            mainCompose = {
-                TextField(
-                    modifier = modifier
-                        .fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = surfaceColor,
-                        focusedIndicatorColor = surfaceColor,
-                        unfocusedIndicatorColor = surfaceColor
-                    ),
-                    value = eventUiState.eventDetails.description,
-                    onValueChange = { eventViewModel.updateDescription(it) },
-                    placeholder = {
+                },
+                misc = {
+                    if (!checked) {
                         Text(
-                            text = "Add description",
+                            modifier = modifier
+                                .clickable {
+                                    timePickerState = TimePickerState(
+                                        initialHour = startDate.get(Calendar.HOUR_OF_DAY),
+                                        initialMinute = startDate.get(Calendar.MINUTE),
+                                        is24Hour = false
+                                    )
+                                    showTimeDialog = true
+                                    showStartTimeDialog = true
+                                }
+                                .padding(4.dp),
+                            text = convertMillisToFormattedTime(startDate.timeInMillis),
+                            style = it,
+                            color = onSurfaceVariantColor
                         )
                     }
-                )
-            }
-        )
+                })
 
-        Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            OutlinedButton(onClick = { /*TODO*/ }) {
-                Text(text = "Clear")
+            AddEventOptionRow(
+                modifier = modifier,
+                mainCompose = {
+                    Text(
+                        modifier = modifier
+                            .clickable {
+                                datePickerState.setSelection(endDate.timeInMillis)
+                                showEndDateDialog = true
+                            },
+                        color = onSurfaceVariantColor,
+                        style = it,
+                        text = convertMillisToFormattedDate(endDate.timeInMillis)
+                    )
+                },
+                misc = {
+                    if (!checked) {
+                        Text(
+                            modifier = modifier
+                                .clickable {
+                                    timePickerState = TimePickerState(
+                                        initialHour = endDate.get(Calendar.HOUR_OF_DAY),
+                                        initialMinute = endDate.get(Calendar.MINUTE),
+                                        is24Hour = false
+                                    )
+                                    showTimeDialog = true
+                                    showEndTimeDialog = true
+                                }
+
+                                .padding(4.dp),
+                            text = convertMillisToFormattedTime(endDate.timeInMillis),
+                            style = it,
+                            color = onSurfaceVariantColor
+                        )
+                    }
+                })
+
+            AddEventOptionRow(
+                modifier = modifier,
+                icon = { m, t ->
+                    Icon(
+                        modifier = m,
+                        painter = painterResource(id = R.drawable.public_24px),
+                        contentDescription = "globe",
+                        tint = t
+                    )
+                },
+                content = "Indian Standard Time"
+            )
+            AddEventOptionRow(
+                modifier = modifier,
+                icon = { m, t ->
+                    Icon(
+                        modifier = m,
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = "globe",
+                        tint = t
+                    )
+                },
+                content = "Does not repeat"
+            )
+            EditScreenDivider()
+
+            AddEventOptionRow(
+                modifier = modifier,
+                content = "Add notification"
+            )
+            EditScreenDivider()
+
+            AddEventOptionRow(
+                modifier = modifier,
+                icon = { m, t ->
+                    Icon(
+                        modifier = m,
+                        imageVector = Icons.Filled.List,
+                        contentDescription = "List",
+                        tint = t
+                    )
+                },
+                mainCompose = {
+                    TextField(
+                        modifier = modifier
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = surfaceColor,
+                            focusedIndicatorColor = surfaceColor,
+                            unfocusedIndicatorColor = surfaceColor
+                        ),
+                        value = eventUiState.eventDetails.description,
+                        onValueChange = { eventViewModel.updateDescription(it) },
+                        placeholder = {
+                            Text(
+                                text = "Add description",
+                            )
+                        }
+                    )
+                }
+            )
+            val coroutineScope = rememberCoroutineScope()
+            Row(
+                modifier = modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                OutlinedButton(
+                    onClick = { eventViewModel.resetEventDetails() },
+                    enabled = eventUiState.eventDetails != EventDetails()
+                ) {
+                    Text(text = "Clear")
+                }
+                Button(onClick = {
+                    coroutineScope.launch {
+                        eventViewModel.saveEvent()
+                        navigateBack.invoke()
+                        eventViewModel.resetEventDetails()
+                    }
+
+                }, enabled = eventUiState.isEventValid) {
+                    Text(text = "Save")
+                }
             }
-            Button(onClick = { /*TODO*/ }) {
-                Text(text = "Save")
-            }
+
+//            Text(
+//                modifier = modifier.background(Color.Red),
+//                text = eventViewModel.ll.collectAsState().value.title
+//            )
+
         }
-
-        Text(
-            modifier = modifier.background(Color.Red),
-            text = "${eventUiState.eventDetails.title} ${eventUiState.eventDetails.start} ${eventUiState.eventDetails.end} ${eventUiState.eventDetails.description} "
-        )
     }
 }
 

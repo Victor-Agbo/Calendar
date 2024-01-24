@@ -12,7 +12,6 @@ data class EventDetails(
 )
 
 fun EventDetails.toEvent() = Event(
-    id = id,
     title = title,
     start = start,
     end = end,

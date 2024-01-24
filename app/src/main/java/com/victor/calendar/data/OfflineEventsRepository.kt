@@ -10,6 +10,9 @@ class OfflineEventsRepository @Inject constructor(private val eventDao: EventDao
 
     override fun getEventStream(id: Int): Flow<Event?> = eventDao.getEvent(id)
 
+    override fun getWeekEventsStream(startTime: Long): Flow<List<Event>> =
+        eventDao.getWeekEvents(startTime)
+
     override suspend fun insertEvent(event: Event) = eventDao.insert(event)
 
     override suspend fun deleteEvent(event: Event) = eventDao.delete(event)
