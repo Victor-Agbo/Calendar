@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.victor.calendar"
-        minSdk = 24
+        minSdk = 25
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
@@ -57,6 +57,7 @@ android {
 
 dependencies {
     implementation(libs.navigation.runtime.ktx)
+    implementation(libs.compose.material)
     val hiltVersion = "2.48.1"
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")

@@ -1,8 +1,8 @@
 package com.victor.calendar.ui.home
 
-import android.icu.util.Calendar
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,11 +13,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,72 +29,69 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.victor.calendar.data.Event
 import com.victor.calendar.util.MILLIS_IN_DAY
+import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     homeViewModel: HomeViewModel,
-    onEditButtonClicked: () -> Unit
+    onCalendarHourClicked: () -> Unit
 ) {
+    val pagerState = rememberPagerState(
+        pageCount = { 3 }, initialPage = 1
+    )
+
+    LaunchedEffect(pagerState.currentPage) {
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            if (page == 2) {
+                homeViewModel.updateStartOfWeek(true)
+            } else if (page == 0) {
+                homeViewModel.updateStartOfWeek(false)
+            }
+            homeViewModel.observeEvents().run {
+                delay(10)
+                pagerState.scrollToPage(1)
+            }
+
+        }
+    }
+
     val homeUiState by homeViewModel.homeUiState.collectAsState()
 
-    LazyVerticalGrid(
-        modifier = modifier
-            .fillMaxWidth(),
-        columns = GridCells.Fixed(8)
-    ) {
+    HorizontalPager(state = pagerState) {
+        LazyVerticalGrid(
+            modifier = modifier
+                .fillMaxWidth(),
+            columns = GridCells.Fixed(8)
+        ) {
 
-        item {
-            Column(
-                modifier = modifier
-                    .width(40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                for (i in 1..11) {
-                    TimeLabel(time = i, dayPart = "AM")
+            item {
+                Column(
+                    modifier = modifier,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    for (i in 1..11) {
+                        TimeLabel(time = i, dayPart = "AM")
+                    }
 
+                    TimeLabel(time = 12, dayPart = "PM")
+                    for (i in 1..11) {
+                        TimeLabel(time = i, dayPart = "PM")
+
+                    }
+                    Spacer(modifier = modifier.height(64.dp))
                 }
-                TimeLabel(time = 12, dayPart = "PM")
-                for (i in 1..11) {
-                    TimeLabel(time = i, dayPart = "PM")
+            }
 
-                }
-                Spacer(modifier = modifier.height(64.dp))
+            items(7) { index ->
+                val dayStart = homeUiState.startOfWeek + (MILLIS_IN_DAY * index)
+                CalendarDay(
+                    eventList = homeUiState.eventList[index],
+                    dayStart = dayStart
+                )
             }
         }
-
-        val calendar = Calendar.getInstance()
-        //calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-
-        val originalList = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-
-        val condition =
-            { element: Int -> element % 2 == 0 } // Example condition, you can replace it with your own
-
-        val groupedLists = originalList.groupBy { if (condition(it)) "even" else "odd" }
-
-        val result = groupedLists.values.toList()
-
-        println(result)
-        var sortedEventList = mapOf<Int, List<Event>>(
-            0 to listOf<Event>(),
-            1 to listOf<Event>(),
-            2 to listOf<Event>(),
-            3 to listOf<Event>(),
-            4 to listOf<Event>(),
-            5 to listOf<Event>(),
-            6 to listOf<Event>(),
-        )
-
-        items(7) {
-            CalendarDay(eventList = homeUiState.eventList, dayStart = calendar.timeInMillis)
-        }
-
     }
 }
 
@@ -109,23 +110,28 @@ fun calculateHourHeight(
 }
 
 @Composable
-fun CalendarDay(modifier: Modifier = Modifier, eventList: List<Event>, dayStart: Long) {
+fun CalendarDay(modifier: Modifier = Modifier, eventList: MutableList<Event>, dayStart: Long) {
     Row(modifier = modifier) {
         VerticalLine(height = 1920, width = 0.25)
         Box {
             for (event in eventList) {
                 CalendarHour(
                     dayStart = dayStart,
-                    event = event
+                    event = event,
+                    onCalendarHourClicked = {}
                 )
             }
-
         }
     }
 }
 
 @Composable
-fun CalendarHour(modifier: Modifier = Modifier, event: Event, dayStart: Long) {
+fun CalendarHour(
+    modifier: Modifier = Modifier,
+    event: Event,
+    dayStart: Long,
+    onCalendarHourClicked: () -> Unit
+) {
     Box(
         modifier = modifier
             .padding(
@@ -139,8 +145,7 @@ fun CalendarHour(modifier: Modifier = Modifier, event: Event, dayStart: Long) {
             .height(calculateHourHeight(event.start, event.end).dp)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(4.dp)
-
-
+            .clickable { onCalendarHourClicked.invoke() }
     ) {
         Text(
             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -154,11 +159,10 @@ fun CalendarHour(modifier: Modifier = Modifier, event: Event, dayStart: Long) {
 fun TimeLabel(modifier: Modifier = Modifier, time: Int, dayPart: String) {
     Text(
         modifier = modifier
-            .padding(top = 64.dp),
+            .padding(top = 66.dp),
         text = "$time $dayPart",
         style = MaterialTheme.typography.labelMedium
     )
-
 }
 
 @Composable

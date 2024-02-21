@@ -3,6 +3,7 @@ package com.victor.calendar.ui.event
 import android.icu.util.Calendar
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import com.victor.calendar.R
 import com.victor.calendar.dialogs.DateDialog
 import com.victor.calendar.dialogs.TimeDialog
@@ -49,7 +51,10 @@ import com.victor.calendar.util.convertMillisToFormattedDate
 import com.victor.calendar.util.convertMillisToFormattedTime
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalWearMaterialApi::class,
+    ExperimentalFoundationApi::class
+)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventEntryScreen(
@@ -67,6 +72,7 @@ fun EventEntryScreen(
         verticalArrangement = Arrangement.Top,
     ) {
         item {
+
             val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
             val surfaceColor: Color = MaterialTheme.colorScheme.surface
 
@@ -334,12 +340,6 @@ fun EventEntryScreen(
                     Text(text = "Save")
                 }
             }
-
-//            Text(
-//                modifier = modifier.background(Color.Red),
-//                text = eventViewModel.ll.collectAsState().value.title
-//            )
-
         }
     }
 }

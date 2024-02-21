@@ -26,8 +26,6 @@ interface EventDao {
     @Query("SELECT * from events ORDER BY start ASC")
     fun getAllEvents(): Flow<List<Event>>
 
-    @Query("SELECT * from events WHERE start < :startTime AND `end` < :startTime+${MILLIS_IN_WEEK} ORDER BY start ASC")
+    @Query("SELECT * from events WHERE start > :startTime AND `end` < :startTime+${MILLIS_IN_WEEK} ORDER BY start ASC")
     fun getWeekEvents(startTime: Long): Flow<List<Event>>
-
-
 }

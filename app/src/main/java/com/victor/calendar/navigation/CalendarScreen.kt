@@ -123,8 +123,9 @@ fun CalendarApp(
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(route = CalendarScreen.Start.name) {
-                    HomeScreen(homeViewModel = homeViewModel,
-                        onEditButtonClicked = { navController.navigate(CalendarScreen.Edit.name) })
+                    HomeScreen(
+                        homeViewModel = homeViewModel,
+                        onCalendarHourClicked = { navController.navigate(CalendarScreen.Edit.name) })
                 }
                 composable(route = CalendarScreen.Entry.name) {
                     EventEntryScreen(
