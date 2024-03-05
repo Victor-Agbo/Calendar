@@ -1,12 +1,16 @@
 package com.victor.calendar.ui.event
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.victor.calendar.data.OfflineEventsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -14,17 +18,18 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
     ViewModel() {
     private val _uiState = MutableStateFlow(EventUiState())
     val uiState: StateFlow<EventUiState> = _uiState.asStateFlow()
+    var initialEventEdit = EventDetails()
 
     fun resetEventDetails() {
         _uiState.update { currentState ->
             currentState.copy(eventDetails = EventDetails(), isEventValid = false)
         }
+        initialEventEdit = EventDetails()
     }
 
     suspend fun saveEvent() {
         offlineEventsRepository.insertEvent(uiState.value.eventDetails.toEvent())
     }
-
 
     private fun updateEventDetails(updateFunction: (EventDetails) -> EventDetails) {
         _uiState.update { currentState ->
@@ -34,6 +39,22 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
                 isEventValid = validateInput(updatedDetails)
             )
         }
+    }
+
+    fun getEvent(id: Int) {
+        val fetchedEvent = EventDetails()
+        viewModelScope.launch {
+            initialEventEdit = fetchedEvent
+            _uiState.update { currentState ->
+                currentState.copy(
+                    eventDetails = offlineEventsRepository.getEventStream(id)
+                        .filterNotNull()
+                        .first()
+                        .toEventDetails()
+                )
+            }.also { initialEventEdit = uiState.value.eventDetails }
+        }
+
     }
 
     fun updateTitle(newTitle: String) {
@@ -60,17 +81,9 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
         }
     }
 
-    fun updateValidity() {
-        _uiState.update { currentState ->
-            currentState.copy(isEventValid = validateInput())
-        }
-    }
-
     private fun validateInput(uiState: EventDetails = this.uiState.value.eventDetails): Boolean {
         return with(uiState) {
-            title.isNotBlank() && start < end
+            (title.isNotBlank() && start < end) && (initialEventEdit.title != title || initialEventEdit.start != start || initialEventEdit.end != end)
         }
     }
-
-
 }

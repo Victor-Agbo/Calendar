@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.victor.calendar.data.Event
+import com.victor.calendar.ui.event.EventViewModel
 import com.victor.calendar.util.MILLIS_IN_DAY
 import kotlinx.coroutines.delay
 
@@ -35,6 +36,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
+    eventViewModel: EventViewModel,
     homeViewModel: HomeViewModel,
     onCalendarHourClicked: () -> Unit
 ) {
@@ -88,7 +90,9 @@ fun HomeScreen(
                 val dayStart = homeUiState.startOfWeek + (MILLIS_IN_DAY * index)
                 CalendarDay(
                     eventList = homeUiState.eventList[index],
-                    dayStart = dayStart
+                    eventViewModel = eventViewModel,
+                    dayStart = dayStart,
+                    onCalendarHourClicked = onCalendarHourClicked
                 )
             }
         }
@@ -110,7 +114,13 @@ fun calculateHourHeight(
 }
 
 @Composable
-fun CalendarDay(modifier: Modifier = Modifier, eventList: MutableList<Event>, dayStart: Long) {
+fun CalendarDay(
+    modifier: Modifier = Modifier,
+    eventViewModel: EventViewModel,
+    eventList: MutableList<Event>,
+    dayStart: Long,
+    onCalendarHourClicked: () -> Unit
+) {
     Row(modifier = modifier) {
         VerticalLine(height = 1920, width = 0.25)
         Box {
@@ -118,7 +128,10 @@ fun CalendarDay(modifier: Modifier = Modifier, eventList: MutableList<Event>, da
                 CalendarHour(
                     dayStart = dayStart,
                     event = event,
-                    onCalendarHourClicked = {}
+                    onCalendarHourClicked = {
+                        eventViewModel.getEvent(event.id)
+                        onCalendarHourClicked.invoke()
+                    }
                 )
             }
         }

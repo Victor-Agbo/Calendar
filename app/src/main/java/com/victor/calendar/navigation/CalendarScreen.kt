@@ -33,7 +33,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -78,6 +81,8 @@ fun CalendarApp(
     val eventViewModel: EventViewModel = hiltViewModel<EventViewModel>()
     val homeViewModel: HomeViewModel = hiltViewModel<HomeViewModel>()
 
+    var new by remember { mutableStateOf(true) }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -92,12 +97,17 @@ fun CalendarApp(
             }
         },
     ) {
+
         Scaffold(
             topBar = {
                 CalendarAppBar(
                     currentScreen = currentScreen,
                     canNavigateBack = navController.previousBackStackEntry != null,
-                    navigateUp = { navController.navigateUp() },
+                    navigateUp = {
+                        new = true
+                        eventViewModel.resetEventDetails()
+                        navController.navigateUp()
+                    },
                     onDrawerButtonClicked = {
                         drawerScope.launch {
                             drawerState.apply {
@@ -124,13 +134,18 @@ fun CalendarApp(
             ) {
                 composable(route = CalendarScreen.Start.name) {
                     HomeScreen(
+                        eventViewModel = eventViewModel,
                         homeViewModel = homeViewModel,
-                        onCalendarHourClicked = { navController.navigate(CalendarScreen.Edit.name) })
+                        onCalendarHourClicked = {
+                            new = false
+                            navController.navigate(CalendarScreen.Entry.name)
+                        })
                 }
                 composable(route = CalendarScreen.Entry.name) {
                     EventEntryScreen(
                         eventViewModel = eventViewModel,
-                        navigateBack = { navController.navigate(CalendarScreen.Start.name) }
+                        navigateBack = { navController.navigate(CalendarScreen.Start.name) },
+                        new = new
                     )
                 }
                 composable(route = CalendarScreen.Edit.name) {

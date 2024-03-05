@@ -3,7 +3,6 @@ package com.victor.calendar.ui.event
 import android.icu.util.Calendar
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
@@ -43,7 +43,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import com.victor.calendar.R
 import com.victor.calendar.dialogs.DateDialog
 import com.victor.calendar.dialogs.TimeDialog
@@ -51,16 +50,14 @@ import com.victor.calendar.util.convertMillisToFormattedDate
 import com.victor.calendar.util.convertMillisToFormattedTime
 import kotlinx.coroutines.launch
 
-@OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalWearMaterialApi::class,
-    ExperimentalFoundationApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun EventEntryScreen(
     modifier: Modifier = Modifier,
     eventViewModel: EventViewModel,
-    navigateBack: () -> Unit
+    navigateBack: () -> Unit,
+    new: Boolean = true
 ) {
     val eventUiState by eventViewModel.uiState.collectAsState()
 
@@ -75,7 +72,7 @@ fun EventEntryScreen(
 
             val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
             val surfaceColor: Color = MaterialTheme.colorScheme.surface
-
+            Text(text = "New: $new Initial: ${eventViewModel.initialEventEdit}")
             TextField(
                 modifier = modifier
                     .fillMaxWidth()
@@ -111,6 +108,11 @@ fun EventEntryScreen(
             }
             val endDate by remember {
                 mutableStateOf(Calendar.getInstance())
+            }
+
+            if (!new) {
+                startDate.apply { timeInMillis = eventUiState.eventDetails.start }
+                endDate.apply { timeInMillis = eventUiState.eventDetails.end }
             }
 
             var showTimeDialog by remember { mutableStateOf(false) }
@@ -294,7 +296,7 @@ fun EventEntryScreen(
                 icon = { m, t ->
                     Icon(
                         modifier = m,
-                        imageVector = Icons.Filled.List,
+                        imageVector = Icons.AutoMirrored.Filled.List,
                         contentDescription = "List",
                         tint = t
                     )
@@ -337,7 +339,7 @@ fun EventEntryScreen(
                     }
 
                 }, enabled = eventUiState.isEventValid) {
-                    Text(text = "Save")
+                    Text(text = if (new) "Save" else "Update")
                 }
             }
         }

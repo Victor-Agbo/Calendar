@@ -11,12 +11,14 @@ data class EventDetails(
 
 )
 
-fun EventDetails.toEvent() = Event(
-    title = title,
-    start = start,
-    end = end,
-    description = description,
-)
+fun EventDetails.toEvent(): Event {
+    return Event(
+        title = title,
+        start = start,
+        end = end,
+        description = description,
+    )
+}
 
 fun Event.toEventUiState(isEntryValid: Boolean): EventUiState =
     EventUiState(eventDetails = this.toEventDetails(), isEventValid = isEntryValid)

@@ -35,7 +35,7 @@ fun DateDialog(
                         extractMillsYear(datePickerState.selectedDateMillis),
                         extractMillsMonth(datePickerState.selectedDateMillis),
                         extractMillsDay(datePickerState.selectedDateMillis),
-                        date.get(Calendar.HOUR),
+                        date.get(Calendar.HOUR_OF_DAY),
                         date.get(Calendar.MINUTE)
                     )
                 }) {
