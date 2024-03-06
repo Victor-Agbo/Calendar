@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Calendar</string>
+    <string name="add_event">Add Event</string>
+    <string name="edit_event">Edit Event</string>
+    <string name="search_event">Search Event</string>
+    <string name="back_button">Back button</string>
+    <string name="entry">Entry</string>
 </resources>
