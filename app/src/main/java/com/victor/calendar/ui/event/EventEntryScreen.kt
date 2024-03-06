@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
@@ -59,7 +58,7 @@ fun EventEntryScreen(
     navigateBack: () -> Unit,
     new: Boolean = true
 ) {
-    val eventUiState by eventViewModel.uiState.collectAsState()
+    val eventUiState by eventViewModel.eventUiState.collectAsState()
 
     LazyColumn(
         modifier = modifier
@@ -326,14 +325,28 @@ fun EventEntryScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 OutlinedButton(
-                    onClick = { eventViewModel.resetEventDetails() },
+                    onClick = {
+                        if (new) {
+                            eventViewModel.resetEventDetails()
+                        } else {
+                            coroutineScope.launch {
+                                eventViewModel.deleteEvent()
+                                navigateBack.invoke()
+                                eventViewModel.resetEventDetails()
+                            }
+                        }
+                    },
                     enabled = eventUiState.eventDetails != EventDetails()
                 ) {
-                    Text(text = "Clear")
+                    Text(text = if (new) "Clear" else "Delete")
                 }
                 Button(onClick = {
                     coroutineScope.launch {
-                        eventViewModel.saveEvent()
+                        if (new) {
+                            eventViewModel.saveEvent()
+                        } else {
+                            eventViewModel.updateEvent()
+                        }
                         navigateBack.invoke()
                         eventViewModel.resetEventDetails()
                     }
