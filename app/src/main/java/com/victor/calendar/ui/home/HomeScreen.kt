@@ -38,7 +38,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     eventViewModel: EventViewModel,
     homeViewModel: HomeViewModel,
-    onCalendarHourClicked: () -> Unit
+    onCalendarHourClicked: () -> Unit,
 ) {
     val pagerState = rememberPagerState(
         pageCount = { 3 }, initialPage = 1

@@ -5,4 +5,6 @@
     <string name="search_event">Search Event</string>
     <string name="back_button">Back button</string>
     <string name="entry">Entry</string>
+    <string name="holidays">Holidays Today</string>
+    <string name="about">About</string>
 </resources>

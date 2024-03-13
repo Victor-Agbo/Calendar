@@ -71,7 +71,7 @@ fun EventEntryScreen(
 
             val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
             val surfaceColor: Color = MaterialTheme.colorScheme.surface
-            Text(text = "New: $new Initial: ${eventViewModel.initialEventEdit}")
+
             TextField(
                 modifier = modifier
                     .fillMaxWidth()

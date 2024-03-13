@@ -9,10 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
@@ -51,6 +50,8 @@ import com.victor.calendar.data.getMonth
 import com.victor.calendar.ui.event.EventEditScreen
 import com.victor.calendar.ui.event.EventEntryScreen
 import com.victor.calendar.ui.event.EventViewModel
+import com.victor.calendar.ui.holiday.HolidayScreen
+import com.victor.calendar.ui.holiday.HolidayViewModel
 import com.victor.calendar.ui.home.HomeScreen
 import com.victor.calendar.ui.home.HomeViewModel
 import kotlinx.coroutines.launch
@@ -60,6 +61,7 @@ enum class CalendarScreen(@StringRes val title: Int) {
     Start(title = R.string.app_name),
     Entry(title = R.string.add_event),
     Edit(title = R.string.edit_event),
+    Holiday(title = R.string.holidays),
     Search(title = R.string.search_event)
 }
 
@@ -75,11 +77,19 @@ fun CalendarApp(
     val currentScreen = CalendarScreen.valueOf(
         backStackEntry?.destination?.route ?: CalendarScreen.Start.name
     )
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
 
     val eventViewModel: EventViewModel = hiltViewModel<EventViewModel>()
+    val holidayViewModel: HolidayViewModel = hiltViewModel<HolidayViewModel>()
     val homeViewModel: HomeViewModel = hiltViewModel<HomeViewModel>()
+
+
+    val currentMonth by remember {
+        mutableStateOf(Calendar.getInstance())
+    }
+    currentMonth.timeInMillis = homeViewModel.startOfWeek
 
     var new by remember { mutableStateOf(true) }
 
@@ -87,12 +97,17 @@ fun CalendarApp(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(modifier = Modifier.fillMaxWidth(0.80F)) {
-                Text("Drawer title", modifier = Modifier.padding(16.dp))
+                Text("Calendar", modifier = Modifier.padding(16.dp))
                 Divider()
                 NavigationDrawerItem(
-                    label = { Text(text = "Drawer Item") },
+                    label = { Text(text = stringResource(R.string.holidays)) },
                     selected = false,
-                    onClick = { /*TODO*/ }
+                    onClick = {
+                        drawerScope.launch {
+                            drawerState.close()
+                        }
+                        navController.navigate(CalendarScreen.Holiday.name)
+                    }
                 )
             }
         },
@@ -101,6 +116,7 @@ fun CalendarApp(
         Scaffold(
             topBar = {
                 CalendarAppBar(
+
                     currentScreen = currentScreen,
                     canNavigateBack = navController.previousBackStackEntry != null,
                     navigateUp = {
@@ -108,6 +124,7 @@ fun CalendarApp(
                         eventViewModel.resetEventDetails()
                         navController.navigateUp()
                     },
+                    currentMonth = getMonth(currentMonth.get(Calendar.MONTH)),
                     onDrawerButtonClicked = {
                         drawerScope.launch {
                             drawerState.apply {
@@ -154,6 +171,12 @@ fun CalendarApp(
                 composable(route = CalendarScreen.Search.name) {
                     EventEditScreen()
                 }
+                composable(route = CalendarScreen.Holiday.name) {
+                    HolidayScreen(
+                        holidayUiState = holidayViewModel.holidayUiState,
+                        holidayViewModel = holidayViewModel
+                    )
+                }
             }
         }
     }
@@ -165,6 +188,7 @@ fun CalendarApp(
 fun CalendarAppBar(
     currentScreen: CalendarScreen,
     canNavigateBack: Boolean,
+    currentMonth: String,
     navigateUp: () -> Unit,
     modifier: Modifier = Modifier,
     onDrawerButtonClicked: () -> Unit
@@ -195,14 +219,7 @@ fun CalendarAppBar(
             if (currentScreen == CalendarScreen.Start) {
                 Row {
                     Text(
-                        text = getMonth(
-                            Calendar.getInstance()
-                                .get(Calendar.MONTH),
-                        ), style = MaterialTheme.typography.displayMedium
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDropDown,
-                        contentDescription = stringResource(R.string.back_button)
+                        text = currentMonth, style = MaterialTheme.typography.displayMedium
                     )
                 }
             } else {
@@ -220,7 +237,7 @@ fun CalendarAppBar(
             if (canNavigateBack) {
                 IconButton(onClick = navigateUp) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back_button)
                     )
                 }

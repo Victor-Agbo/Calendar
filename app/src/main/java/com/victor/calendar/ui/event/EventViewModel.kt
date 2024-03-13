@@ -18,7 +18,8 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
     ViewModel() {
     private val _eventUiState = MutableStateFlow(EventUiState())
     val eventUiState: StateFlow<EventUiState> = _eventUiState.asStateFlow()
-    var initialEventEdit = EventDetails()
+    private var initialEventEdit = EventDetails()
+
 
     fun resetEventDetails() {
         _eventUiState.update { currentState ->

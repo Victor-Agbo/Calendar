@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     id("kotlin-kapt")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -72,12 +73,27 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.material)
 
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.scalars)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
+    implementation(libs.okhttp)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+
+
     //Room
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
 
     testImplementation(libs.junit)
+
+    val coroutinesVersion = "1.8.0"
+    testImplementation(libs.kotlinx.coroutines.test)
+
+
 
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
