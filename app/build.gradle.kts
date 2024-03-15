@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     id("kotlin-kapt")
     id("kotlin-parcelize")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -23,7 +24,9 @@ android {
             useSupportLibrary = true
         }
     }
-
+    buildFeatures {
+        buildConfig = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -72,7 +75,8 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.material)
-
+    implementation(libs.play.services.auth)
+    implementation(libs.coil.compose)
 
     // Retrofit
     implementation(libs.retrofit)
@@ -85,12 +89,15 @@ dependencies {
 
     //Room
     implementation(libs.room.runtime)
+    implementation(libs.firebase.auth)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.lifecycle.runtime.compose)
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
 
     testImplementation(libs.junit)
 
-    val coroutinesVersion = "1.8.0"
+
     testImplementation(libs.kotlinx.coroutines.test)
 
 

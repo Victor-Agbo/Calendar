@@ -1,3 +1,8 @@
+buildscript {
+    dependencies {
+        classpath(libs.google.services)
+    }
+}
 //@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     alias(libs.plugins.android.application) apply false
