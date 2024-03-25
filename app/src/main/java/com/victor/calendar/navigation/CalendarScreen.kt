@@ -184,7 +184,6 @@ fun CalendarApp(
                     "Sign in successful",
                     Toast.LENGTH_LONG
                 ).show()
-
                 signInViewModel.resetState()
             }
         }
@@ -261,7 +260,7 @@ fun CalendarApp(
                 composable(route = CalendarScreen.Entry.name) {
                     EventEntryScreen(
                         eventViewModel = eventViewModel,
-                        navigateBack = { navController.navigate(CalendarScreen.Start.name) },
+                        navigateBack = { navController.popBackStack() },
                         new = new
                     )
                 }

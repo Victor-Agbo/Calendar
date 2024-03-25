@@ -37,11 +37,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
     buildFeatures {
         compose = true
@@ -96,11 +96,15 @@ dependencies {
     implementation(libs.room.ktx)
 
     testImplementation(libs.junit)
-
-
     testImplementation(libs.kotlinx.coroutines.test)
 
-
+    testImplementation(libs.core)
+    // Optional -- Mockito framework
+    testImplementation(libs.mockito.core)
+    // Optional -- mockito-kotlin
+    testImplementation(libs.mockito.kotlin)
+    // Optional -- Mockk framework
+    testImplementation(libs.mockk)
 
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -109,6 +113,16 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.navigation.testing)
     androidTestImplementation(libs.espresso.intents)
+    val androidXTestVersion = "1.5.0"
+    androidTestImplementation("androidx.test:runner:$androidXTestVersion")
+    androidTestImplementation("androidx.test:rules:$androidXTestVersion")
+    androidTestImplementation("androidx.test:core-ktx:1.4.0")
+    androidTestImplementation("androidx.test.ext:junit-ktx:1.1.3")
+
+
+    val uiAutomatorVersion = "2.3.0"
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:$uiAutomatorVersion")
+
 
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
