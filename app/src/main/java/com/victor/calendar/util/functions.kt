@@ -3,8 +3,10 @@ package com.victor.calendar.util
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import com.victor.calendar.data.monthAbbreviationMap
+import org.jetbrains.annotations.VisibleForTesting
 import java.util.Locale
 
+@VisibleForTesting
 fun convertMillisToFormattedTime(millis: Long): String {
     val calendar = Calendar.getInstance()
     calendar.timeInMillis = millis

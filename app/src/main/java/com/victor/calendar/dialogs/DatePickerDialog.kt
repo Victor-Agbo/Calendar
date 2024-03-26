@@ -30,7 +30,6 @@ fun DateDialog(
             onDismissRequest = onDismissRequest,
             confirmButton = {
                 TextButton(onClick = {
-                    onConfirmRequest.invoke()
                     date.set(
                         extractMillsYear(datePickerState.selectedDateMillis),
                         extractMillsMonth(datePickerState.selectedDateMillis),
@@ -38,6 +37,7 @@ fun DateDialog(
                         date.get(Calendar.HOUR_OF_DAY),
                         date.get(Calendar.MINUTE)
                     )
+                    onConfirmRequest.invoke()
                 }) {
                     Text(text = "Confirm")
                 }

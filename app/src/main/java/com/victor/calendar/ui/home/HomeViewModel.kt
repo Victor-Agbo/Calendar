@@ -31,10 +31,6 @@ class HomeViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) :
     ViewModel() {
-    companion object {
-        private const val TIMEOUT_MILLIS = 5_000L
-    }
-
 
     @OptIn(SavedStateHandleSaveableApi::class)
     var startOfWeek: Long by savedStateHandle.saveable {

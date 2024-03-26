@@ -38,7 +38,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     eventViewModel: EventViewModel,
     homeViewModel: HomeViewModel,
-    onCalendarHourClicked: () -> Unit
+    onCalendarHourClicked: () -> Unit,
 ) {
     val pagerState = rememberPagerState(
         pageCount = { 3 }, initialPage = 1
@@ -103,7 +103,7 @@ fun calculateTopPadding(
     dayStart: Long,
     eventStart: Long
 ): Float {
-    return (((eventStart - dayStart) / MILLIS_IN_DAY.toFloat()) * 1920)
+    return ((((eventStart - dayStart).toFloat()) / MILLIS_IN_DAY.toFloat()) * 1920)
 }
 
 fun calculateHourHeight(

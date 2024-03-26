@@ -16,23 +16,33 @@ import javax.inject.Inject
 @HiltViewModel
 class EventViewModel @Inject constructor(private val offlineEventsRepository: OfflineEventsRepository) :
     ViewModel() {
-    private val _uiState = MutableStateFlow(EventUiState())
-    val uiState: StateFlow<EventUiState> = _uiState.asStateFlow()
-    var initialEventEdit = EventDetails()
+    private val _eventUiState = MutableStateFlow(EventUiState())
+    val eventUiState: StateFlow<EventUiState> = _eventUiState.asStateFlow()
+    private var initialEventEdit = EventDetails()
+
 
     fun resetEventDetails() {
-        _uiState.update { currentState ->
+        _eventUiState.update { currentState ->
             currentState.copy(eventDetails = EventDetails(), isEventValid = false)
         }
         initialEventEdit = EventDetails()
     }
 
+    suspend fun deleteEvent() {
+        offlineEventsRepository.deleteEvent(eventUiState.value.eventDetails.toEvent())
+    }
+
     suspend fun saveEvent() {
-        offlineEventsRepository.insertEvent(uiState.value.eventDetails.toEvent())
+        offlineEventsRepository.insertEvent(eventUiState.value.eventDetails.toEvent())
+    }
+
+    suspend fun updateEvent() {
+        offlineEventsRepository.updateEvent(eventUiState.value.eventDetails.toEvent())
+
     }
 
     private fun updateEventDetails(updateFunction: (EventDetails) -> EventDetails) {
-        _uiState.update { currentState ->
+        _eventUiState.update { currentState ->
             val updatedDetails = updateFunction(currentState.eventDetails)
             currentState.copy(
                 eventDetails = updatedDetails,
@@ -45,14 +55,14 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
         val fetchedEvent = EventDetails()
         viewModelScope.launch {
             initialEventEdit = fetchedEvent
-            _uiState.update { currentState ->
+            _eventUiState.update { currentState ->
                 currentState.copy(
                     eventDetails = offlineEventsRepository.getEventStream(id)
                         .filterNotNull()
                         .first()
                         .toEventDetails()
                 )
-            }.also { initialEventEdit = uiState.value.eventDetails }
+            }.also { initialEventEdit = eventUiState.value.eventDetails }
         }
 
     }
@@ -81,8 +91,8 @@ class EventViewModel @Inject constructor(private val offlineEventsRepository: Of
         }
     }
 
-    private fun validateInput(uiState: EventDetails = this.uiState.value.eventDetails): Boolean {
-        return with(uiState) {
+    private fun validateInput(eventUiState: EventDetails = this.eventUiState.value.eventDetails): Boolean {
+        return with(eventUiState) {
             (title.isNotBlank() && start < end) && (initialEventEdit.title != title || initialEventEdit.start != start || initialEventEdit.end != end)
         }
     }

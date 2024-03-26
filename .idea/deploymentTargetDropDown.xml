@@ -2,16 +2,16 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="CalendarScreenNavigationTest">
-        <State />
-      </entry>
       <entry key="app">
         <State />
       </entry>
-      <entry key="calendarNavHost_verifyEntryDestination()">
+      <entry key="testCalendarHourContent()">
         <State />
       </entry>
-      <entry key="calendarNavHost_verifyStartDestination()">
+      <entry key="useAppContext()">
+        <State />
+      </entry>
+      <entry key="writeUserAndReadInList()">
         <State />
       </entry>
     </value>
