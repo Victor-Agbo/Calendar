@@ -70,7 +70,6 @@ import com.victor.calendar.data.getMonth
 import com.victor.calendar.sign_in.GoogleAuthUiClient
 import com.victor.calendar.sign_in.SignInViewModel
 import com.victor.calendar.sign_in.UserData
-import com.victor.calendar.ui.event.EventEditScreen
 import com.victor.calendar.ui.event.EventEntryScreen
 import com.victor.calendar.ui.event.EventViewModel
 import com.victor.calendar.ui.holiday.HolidayScreen
@@ -83,9 +82,7 @@ import java.util.Calendar
 enum class CalendarScreen(@StringRes val title: Int) {
     Start(title = R.string.app_name),
     Entry(title = R.string.add_event),
-    Edit(title = R.string.edit_event),
     Holiday(title = R.string.holidays),
-    Search(title = R.string.search_event)
 }
 
 
@@ -263,12 +260,6 @@ fun CalendarApp(
                         navigateBack = { navController.popBackStack() },
                         new = new
                     )
-                }
-                composable(route = CalendarScreen.Edit.name) {
-                    EventEditScreen()
-                }
-                composable(route = CalendarScreen.Search.name) {
-                    EventEditScreen()
                 }
                 composable(route = CalendarScreen.Holiday.name) {
                     HolidayScreen(

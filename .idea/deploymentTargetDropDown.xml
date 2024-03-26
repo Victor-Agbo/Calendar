@@ -2,16 +2,16 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
-      <entry key="AppTest">
-        <State />
-      </entry>
-      <entry key="CalendarHourTest">
-        <State />
-      </entry>
       <entry key="app">
         <State />
       </entry>
       <entry key="testCalendarHourContent()">
+        <State />
+      </entry>
+      <entry key="useAppContext()">
+        <State />
+      </entry>
+      <entry key="writeUserAndReadInList()">
         <State />
       </entry>
     </value>
